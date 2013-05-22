@@ -1,0 +1,15 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    cinch (2.0.4)
+    cinch-identify (1.4.1)
+      cinch (~> 2.0)
+    nokogiri (1.5.9)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  cinch
+  cinch-identify
+  nokogiri
