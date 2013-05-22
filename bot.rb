@@ -30,13 +30,8 @@ def load_data
       c.children.each {|dt|
         if dt.name == 'dt'
           param=dt.children.first.text
-          p param
-#          data[last_type][last_subtype][param] ||= ''
           last='dt'
         elsif last=='dt' and dt.name == 'dd'
-          p param
-          p dt.children.first.text
-          p data[last_type][last_subtype][param]
           data[last_type][last_subtype][param] = dt.children.first.text
           last=''
         end
