@@ -8,14 +8,18 @@ bot = Cinch::Bot.new do
     c.server = "localhost"
     c.nick = 'fantoche'
     c.realname = 'puppet doc bot'
-    c.channels = ["#t"]
-    c.user = 'carlasouza'
+    c.channels = ["#yourchannel"]
+    c.user = 'owner_nick' # owner's nick
     c.plugins.plugins = [Cinch::Plugins::Identify] # optionally add more plugins
     c.plugins.options[Cinch::Plugins::Identify] = {
       :username => "fantoche",
       :password => "XXX",
       :type     => :nickserv,
     }
+  end
+
+  on :message, /^!help/ do |m|
+    m.reply "#{m.user.nick}: !types | !type <type> | !parameters <type> | !parameter <type> <parameter> | !link <type>"
   end
 
   on :message, /^!reload/ do |m|
@@ -52,6 +56,8 @@ bot = Cinch::Bot.new do
       last_type = ''
       last_subtype = ''
       last_element = ''
+      # Now let's parse the html
+      # TODO omg refactor this
       a[0].children.entries.delete_if {|e| !(e.name=='h3' || e.name=='h4' || e.name='dl')}[12..-1].each { |c|
         if c.name == 'h3'
           last_element = 'h3'
