@@ -1,4 +1,3 @@
-require 'nokogiri'
 require 'open-uri'
 require 'cinch'
 require "cinch/plugins/identify"
@@ -49,64 +48,58 @@ bot = Cinch::Bot.new do
 
   helpers do
     def load_data
-      doc = Nokogiri::HTML(open('http://docs.puppetlabs.com/references/latest/type.html'))
-      a = doc.css('div.primary-content')
-
-      data = {}
-      last_type = ''
-      last_subtype = ''
-      last_element = ''
-      # Now let's parse the html
-      # TODO omg refactor this
-      a[0].children.entries.delete_if {|e| !(e.name=='h3' || e.name=='h4' || e.name='dl')}[12..-1].each { |c|
-        if c.name == 'h3'
-          last_element = 'h3'
-          last_type = c.children.first.text
-          data[last_type] ||= {}
-        elsif c.name == 'h4'
-          last_element = 'h4'
-          last_subtype = c.children.first.text
-          data[last_type][last_subtype] ||= {}
-        elsif c.name == 'dl' and last_element == 'h3'
-          data[last_type]['desc'] = c.children.text.gsub("\n",' ')
-          last_element = 'dl'
-        elsif c.name == 'dl' and last_element == 'h4'
-          last, param = '', ''
-          c.children.each {|dt|
-            if dt.name == 'dt'
-              param=dt.children.first.text
-              last='dt'
-            elsif last=='dt' and dt.name == 'dd'
-              data[last_type][last_subtype][param] = dt.children.first.text.gsub("\n",' ')
-              last=''
-            end
-          }
-          last_element = 'dl'
-        end
-      }
-      data
+      jsonlink = 'http://docs.puppetlabs.com/references/latest/type.json'
+      JSON.load(open(jsonlink).read)
     end
 
     def types
       @data ||= load_data
-      @data.keys.join ', '
+      @data.keys.join(', ')
     end
 
     def desc_type type
       @data ||= load_data
-      @data[type]['desc']
+      @data[type]['description']
     end
 
     def parameters type
       @data ||= load_data
-      @data[type]['Parameters'].keys.join ', '
+      @data[type]['attributes'].keys.join ', '
     end
 
     def desc_param type, param
       @data ||= load_data
-      @data[type]['Parameters'][param]
+      info = @data[type]['attributes'][param]
+      description = info['description']
+      details = "#{info['kind']}#{info['namevar'] ? ', namevar':''}"
+      "#{param} (#{details}): #{description}"
     end
 
+    def features type
+      @data ||= load_data
+      @data[type]['features'].keys.join(', ')
+    end
+
+    def desc_feature type, feature
+      @data ||= load_data
+      @data[type]['features'][feature]
+    end
+
+    def providers type
+      @data ||= load_data
+      @data[type]['providers'].keys.join(', ')
+    end
+
+    def desc_provider type, provider
+      @data ||= load_data
+      @data[type]['providers'][provider]['description']
+    end
+
+    def munge_desc
+      # remove \n
+      # prints short
+      # prings long description
+    end
   end
 
 end
