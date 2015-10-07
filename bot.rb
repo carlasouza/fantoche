@@ -18,7 +18,7 @@ bot = Cinch::Bot.new do
   end
 
   on :message, /^!help/ do |m|
-    m.reply "#{m.user.nick}: !types | !type <type> | !parameters <type> | !parameter <type> <parameter> | !link <type>"
+    m.reply "#{m.user.nick}: !types | !type <type> | !attributes <type> | !attribute <type> <attribute> | !link <type>"
   end
 
   on :message, /^!reload/ do |m|
@@ -38,12 +38,28 @@ bot = Cinch::Bot.new do
     m.reply("#{m.user.nick}: #{type}: http://docs.puppetlabs.com/references/latest/type.html##{type}")
   end
 
-  on :message, /^!parameters (.+)/ do |m, type|
-    m.reply("#{m.user.nick}: #{type}: #{parameters(type) || 'invalid type'}")
+  on :message, /^!attributes (.+)/ do |m, type|
+    m.reply("#{m.user.nick}: #{type}: #{attributes(type) || 'invalid type'}")
   end
 
-  on :message, /^!parameter (.+?) (.+)/ do |m, type, param|
-    m.reply("#{m.user.nick}: #{type} - #{param}: #{desc_param(type,param) || 'invalid parameter' rescue 'invalid type'}")
+  on :message, /^!attribute (.+?) (.+)/ do |m, type, attribute|
+    m.reply("#{m.user.nick}: #{type} - #{attribute}: #{desc_attribute(type,attribute) || 'invalid attribute' rescue 'invalid type'}")
+  end
+
+  on :message, /^!providers (.+)/ do |m, type|
+    m.reply("#{m.user.nick}: #{type} - #{providers(type || 'invalid type')}")
+  end
+
+  on :message, /^!provider (.+?) (.+)/ do |m, type, provider|
+    m.reply("#{m.user.nick}: #{type} - #{provider}: #{desc_provider(type,provider) || 'invalid provider' rescue 'invalid type'}")
+  end
+
+  on :message, /^!features (.+)/ do |m, type|
+    m.reply("#{m.user.nick}: #{type} - #{features(type || 'invalid type')}")
+  end
+
+  on :message, /^!feature (.+?) (.+)/ do |m, type, feature|
+    m.reply("#{m.user.nick}: #{type} - #{feature}: #{desc_feature(type,feature) || 'invalid feature' rescue 'invalid type'}")
   end
 
   helpers do
@@ -57,22 +73,9 @@ bot = Cinch::Bot.new do
       @data.keys.join(', ')
     end
 
-    def desc_type type
+    def attributes type
       @data ||= load_data
-      @data[type]['description']
-    end
-
-    def parameters type
-      @data ||= load_data
-      @data[type]['attributes'].keys.join ', '
-    end
-
-    def desc_param type, param
-      @data ||= load_data
-      info = @data[type]['attributes'][param]
-      description = info['description']
-      details = "#{info['kind']}#{info['namevar'] ? ', namevar':''}"
-      "#{param} (#{details}): #{description}"
+      @data[type]['attributes'].keys.join(', ')
     end
 
     def features type
@@ -80,14 +83,27 @@ bot = Cinch::Bot.new do
       @data[type]['features'].keys.join(', ')
     end
 
-    def desc_feature type, feature
-      @data ||= load_data
-      @data[type]['features'][feature]
-    end
-
     def providers type
       @data ||= load_data
       @data[type]['providers'].keys.join(', ')
+    end
+
+    def desc_type type
+      @data ||= load_data
+      @data[type]['description']
+    end
+
+    def desc_attribute type, attribute
+      @data ||= load_data
+      info = @data[type]['attributes'][attribute]
+      description = info['description']
+      details = "#{info['kind']}#{info['namevar'] ? ', namevar':''}"
+      "#{attribute} (#{details}): #{description}"
+    end
+
+    def desc_feature type, feature
+      @data ||= load_data
+      @data[type]['features'][feature]
     end
 
     def desc_provider type, provider
@@ -95,10 +111,12 @@ bot = Cinch::Bot.new do
       @data[type]['providers'][provider]['description']
     end
 
-    def munge_desc
-      # remove \n
-      # prints short
-      # prings long description
+    def munge_desc text
+      text.gsub("\n",' ')
+    end
+
+    def short_desc text
+      munge_desc(text).split('.').first.concat('.')
     end
   end
 
